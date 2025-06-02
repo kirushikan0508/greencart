@@ -10,7 +10,7 @@ const Navbar = () => {
 
     const logout = async() => {
         setUser(null);
-        Navigate('/')
+        navigate('/')
     }
 
 
