@@ -2,16 +2,33 @@ import React, { useEffect, useState } from 'react'
 import { useAppContext } from '../../context/AppContext'
 
 const SellerLogin = () => {
-    const {setIsSeller, navigate} = useAppContext()
+    const {setIsSeller, navigate, axios} = useAppContext()
     const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
+    const [password, setPassword] = useState("");
 
-    const onSubmitHandler = async (e) => {
-        e.preventDefault();
-        // Here you should add actual authentication logic
-        setIsSeller(true);
-        navigate('/seller');
+    const onSubmitHandler = async (event) => {
+        try{
+            event.preventDefault();
+            const {data} = await axios.post('/api/seller/login', {email,password})
+            if(data.success){
+                setIsSeller(true)
+                navigate('/seller')
+            }else{
+                toast.error(error.message)
+
+            }
+
+        }catch(error){
+            toast.error(error.message)
+
+        }
     }
+
+        useEffect(()=>{
+            if(isSeller){
+                navigate("/seller")
+            }
+        },{isSeller})
 
     return (
         <div>

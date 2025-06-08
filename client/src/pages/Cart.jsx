@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import { assets, dummyAddress } from "../assets/assets";
+import toast from "react-hot-toast";
 
 const Cart = () => {
-    const {products, currency, cartItems, removeFromCart, getCartCount,updateCartItem,navigate,getCartAmount} = useAppContext()
+    const {products, currency, cartItems, removeFromCart, getCartCount,updateCartItem,navigate,getCartAmount,axios,user,setCartItems} = useAppContext()
 
     const[cartArray, setCartArray]= useState([])
-    const[addresses, setAddresses]= useState(dummyAddress)
+    const[addresses, setAddresses]= useState([])
     const [showAddress, setShowAddress] = useState(false)
-    const [selectedAddress, setSelectedAddress] = useState(dummyAddress[0])
+    const [selectedAddress, setSelectedAddress] = useState(null)
     const [paymentOption, setPaymentOption] = useState('COD')
 
     const getCart=()=>{
@@ -22,7 +23,51 @@ const Cart = () => {
         setCartArray(tempArray)
     }
 
+    const getUserAddress =async ()=>{
+        try{
+            const{data}= await axios.get('/api/address/get');
+            if(data.success){
+                setAddresses(data.addresses)
+                if(data.addresses.length>0){
+                    setSelectedAddress(data.addresses[0])
+                }
+            }else{
+                toast.error(data.message)
+            }
+
+        } catch(error){
+             toast.error(error.message)
+
+        }
+    }
+
     const placeOrder = async () => {
+        try{
+            if(!selectedAddress){
+                return toast.error("please select an address")
+            }
+
+            //place order with COD
+            if(paymentOption === COD){
+                const {data} = await axios.post('/api/order/cod',{
+                    userId :user._id,
+                    items: cartArray.map(item=>({product: item._id, quantity: item.quantity})),
+                    address: selectedAddress._id
+                })
+
+                if(data.success){
+                    toast.success(data.message)
+                    setCartItems({})
+                    navigate('/my-orders')
+                }else{
+                    toast.error(data.message)
+                }
+            }
+
+        } catch(error){
+            toast.error(error.message)
+
+        }
     }
     
     useEffect(() => {
@@ -31,6 +76,13 @@ const Cart = () => {
         }
 
     }, [products, cartItems]);
+
+    useEffect(()=>{
+        if(user){
+            getUserAddress()
+
+        }
+    },[user])
     
     return products.length >0 &&cartItems ? (
         <div className="flex flex-col md:flex-row mt-16">
